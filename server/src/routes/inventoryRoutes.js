@@ -10,6 +10,7 @@ router.get('/', verifyToken, async (req, res) => {
         const products = await dbAll('SELECT * FROM products ORDER BY created_at DESC');
         res.json(products);
     } catch (error) {
+        console.error('Error loading products:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -34,13 +35,14 @@ router.post('/', verifyToken, async (req, res) => {
     try {
         const result = await dbRun(
             'INSERT INTO products (name, description, sku, quantity, unit_price, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [name, description, sku, quantity || 0, unit_price || 0, category, req.user.id]
+            [name, description, sku || null, quantity || 0, unit_price || 0, category, req.user.id]
         );
 
-        const product = await dbGet('SELECT * FROM products WHERE id = ?', [result.lastID]);
+        const product = await dbGet('SELECT * FROM products WHERE id = ?', [result.insertId]);
         res.status(201).json(product);
     } catch (error) {
-        if (error.message && error.message.includes('UNIQUE')) {
+        console.error('Error creating product:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ error: 'SKU already exists' });
         }
         res.status(500).json({ error: 'Server error' });
@@ -53,13 +55,14 @@ router.put('/:id', verifyToken, async (req, res) => {
 
     try {
         await dbRun(
-            'UPDATE products SET name = ?, description = ?, sku = ?, quantity = ?, unit_price = ?, category = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            'UPDATE products SET name = ?, description = ?, sku = ?, quantity = ?, unit_price = ?, category = ? WHERE id = ?',
             [name, description, sku, quantity, unit_price, category, req.params.id]
         );
 
         const product = await dbGet('SELECT * FROM products WHERE id = ?', [req.params.id]);
         res.json(product);
     } catch (error) {
+        console.error('Error updating product:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });

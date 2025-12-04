@@ -57,7 +57,7 @@ router.post('/', verifyToken, async (req, res) => {
             [saleNumber, new Date().toISOString().split('T')[0], customer_name || '', payment_method, totalUsd, totalBs, exchange_rate, req.user.id]
         );
 
-        const saleId = saleResult.lastID;
+        const saleId = saleResult.insertId;
 
         // Insert sale items and update product quantities
         for (const item of items) {
@@ -122,7 +122,9 @@ router.get('/daily-report', verifyToken, requireRole('admin', 'owner', 'superuse
         const saleIds = sales.map(s => s.id);
         let allItems = [];
         if (saleIds.length > 0) {
-            allItems = await dbAll(`SELECT * FROM sale_items WHERE sale_id IN (${saleIds.join(',')})`);
+            // Use parameterized query for safety
+            const placeholders = saleIds.map(() => '?').join(',');
+            allItems = await dbAll(`SELECT * FROM sale_items WHERE sale_id IN (${placeholders})`, saleIds);
         }
 
         // Group by product
@@ -137,8 +139,8 @@ router.get('/daily-report', verifyToken, requireRole('admin', 'owner', 'superuse
                 };
             }
             productStats[item.product_name].sold += item.quantity;
-            productStats[item.product_name].revenue_usd += item.subtotal_usd;
-            productStats[item.product_name].revenue_bs += item.subtotal_bs;
+            productStats[item.product_name].revenue_usd += parseFloat(item.subtotal_usd);
+            productStats[item.product_name].revenue_bs += parseFloat(item.subtotal_bs);
         }
 
         // Get current stock for each product
@@ -146,7 +148,6 @@ router.get('/daily-report', verifyToken, requireRole('admin', 'owner', 'superuse
         for (const product of products) {
             const dbProduct = await dbGet('SELECT quantity FROM products WHERE name = ?', [product.name]);
             product.final_stock = dbProduct ? dbProduct.quantity : 0;
-            // We don't have historical stock, so we approximate
             product.initial_stock = product.final_stock + product.sold;
         }
 
@@ -160,15 +161,15 @@ router.get('/daily-report', verifyToken, requireRole('admin', 'owner', 'superuse
                     count: 0
                 };
             }
-            paymentMethods[sale.payment_method].usd += sale.total_usd;
-            paymentMethods[sale.payment_method].bs += sale.total_bs;
+            paymentMethods[sale.payment_method].usd += parseFloat(sale.total_usd);
+            paymentMethods[sale.payment_method].bs += parseFloat(sale.total_bs);
             paymentMethods[sale.payment_method].count += 1;
         }
 
         // Calculate totals
         const totals = {
-            total_usd: sales.reduce((sum, s) => sum + s.total_usd, 0),
-            total_bs: sales.reduce((sum, s) => sum + s.total_bs, 0),
+            total_usd: sales.reduce((sum, s) => sum + parseFloat(s.total_usd), 0),
+            total_bs: sales.reduce((sum, s) => sum + parseFloat(s.total_bs), 0),
             total_sales: sales.length
         };
 

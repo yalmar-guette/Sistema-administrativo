@@ -37,6 +37,7 @@ router.post('/login', async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -68,10 +69,11 @@ router.post('/register', async (req, res) => {
 
         res.json({
             message: 'User created successfully',
-            userId: result.lastID
+            userId: result.insertId
         });
     } catch (error) {
-        if (error.message && error.message.includes('UNIQUE')) {
+        console.error('Register error:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ error: 'Username or email already exists' });
         }
         res.status(500).json({ error: 'Server error' });
