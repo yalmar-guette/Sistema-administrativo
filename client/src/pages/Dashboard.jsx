@@ -33,13 +33,13 @@ export default function Dashboard() {
             const transactions = accountingRes.data;
             const sales = salesRes.data;
 
-            const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.unit_price), 0);
-            const lowStockCount = products.filter(p => p.quantity < 10).length;
+            const totalValue = products.reduce((sum, p) => sum + (parseInt(p.quantity) * parseFloat(p.unit_price)), 0);
+            const lowStockCount = products.filter(p => parseInt(p.quantity) < 10).length;
 
-            const revenue = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-            const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const revenue = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
-            const totalSalesRevenue = sales.reduce((sum, s) => sum + s.total_usd, 0);
+            const totalSalesRevenue = sales.reduce((sum, s) => sum + parseFloat(s.total_usd), 0);
 
             setStats({
                 totalProducts: products.length,
@@ -56,7 +56,7 @@ export default function Dashboard() {
             const recentSales = sales.slice(0, 3).map(s => ({
                 type: 'sale',
                 description: `Venta ${s.sale_number} - ${s.customer_name || 'Cliente'}`,
-                amount: s.total_usd,
+                amount: parseFloat(s.total_usd) || 0,
                 date: s.date
             }));
             setRecentActivity(recentSales);
@@ -233,7 +233,7 @@ export default function Dashboard() {
                                                 <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(activity.date).toLocaleDateString('es-ES')}</p>
                                             </div>
                                         </div>
-                                        <span className="text-sm font-bold text-green-600 dark:text-green-400">${activity.amount.toFixed(2)}</span>
+                                        <span className="text-sm font-bold text-green-600 dark:text-green-400">${(parseFloat(activity.amount) || 0).toFixed(2)}</span>
                                     </div>
                                 ))
                             ) : (
