@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Use production backend URL when deployed, localhost for development
 const api = axios.create({
-    baseURL: '/api'
+    baseURL: import.meta.env.PROD
+        ? 'https://sistema-administrativo-backend.onrender.com/api'
+        : 'http://localhost:3000/api'
 });
 
 // Add token to requests
