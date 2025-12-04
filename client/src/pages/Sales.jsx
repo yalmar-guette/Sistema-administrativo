@@ -86,8 +86,8 @@ export default function Sales() {
             return;
         }
 
-        const unitPriceUsd = product.unit_price;
-        const unitPriceBs = unitPriceUsd * exchangeRate;
+        const unitPriceUsd = parseFloat(product.unit_price) || 0;
+        const unitPriceBs = unitPriceUsd * parseFloat(exchangeRate);
         const subtotalUsd = unitPriceUsd * quantity;
         const subtotalBs = unitPriceBs * quantity;
 
@@ -205,6 +205,8 @@ export default function Sales() {
                                 <tbody>
                                     {sales.map((sale) => {
                                         const pm = PAYMENT_METHODS[sale.payment_method];
+                                        const totalUsdSale = parseFloat(sale.total_usd) || 0;
+                                        const totalBsSale = parseFloat(sale.total_bs) || 0;
                                         return (
                                             <tr key={sale.id}>
                                                 <td className="font-mono text-sm font-semibold text-primary-600 dark:text-primary-400">
@@ -217,9 +219,9 @@ export default function Sales() {
                                                         {pm?.icon} {pm?.label}
                                                     </span>
                                                 </td>
-                                                <td className="text-right font-semibold">${sale.total_usd.toFixed(2)}</td>
+                                                <td className="text-right font-semibold">${totalUsdSale.toFixed(2)}</td>
                                                 <td className="text-right font-semibold text-green-600 dark:text-green-400">
-                                                    {sale.total_bs.toFixed(2)} Bs
+                                                    {totalBsSale.toFixed(2)} Bs
                                                 </td>
                                                 <td>
                                                     <div className="flex justify-center">
@@ -248,7 +250,7 @@ export default function Sales() {
                         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Nueva Venta</h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Tasa del día: {exchangeRate.toFixed(2)} Bs/$
+                                Tasa del día: {parseFloat(exchangeRate).toFixed(2)} Bs/$
                             </p>
                         </div>
 
@@ -299,9 +301,9 @@ export default function Sales() {
                                         className="input flex-1"
                                     >
                                         <option value="">Seleccionar producto...</option>
-                                        {products.filter(p => p.quantity > 0).map(p => (
+                                        {products.filter(p => parseInt(p.quantity) > 0).map(p => (
                                             <option key={p.id} value={p.id}>
-                                                {p.name} (Stock: {p.quantity}) - ${p.unit_price.toFixed(2)}
+                                                {p.name} (Stock: {p.quantity}) - ${(parseFloat(p.unit_price) || 0).toFixed(2)}
                                             </option>
                                         ))}
                                     </select>
