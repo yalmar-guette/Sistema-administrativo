@@ -210,7 +210,7 @@ export async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS shift_inventory (
         id INT AUTO_INCREMENT PRIMARY KEY,
         shift_id INT NOT NULL,
-        product_id INT NOT NULL,
+        product_id INT,
         product_name VARCHAR(255) NOT NULL,
         initial_quantity INT NOT NULL,
         final_quantity INT NULL,
