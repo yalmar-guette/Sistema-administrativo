@@ -131,35 +131,39 @@ export default function Inventory() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredProducts.map((product) => (
-                                        <tr key={product.id}>
-                                            <td className="font-medium">{product.name}</td>
-                                            <td className="text-right">{product.quantity}</td>
-                                            <td className="text-right font-semibold">${product.unit_price.toFixed(2)}</td>
-                                            <td className="text-right font-semibold text-primary-600 dark:text-primary-400">
-                                                {(product.unit_price * exchangeRate).toFixed(2)} Bs
-                                            </td>
-                                            <td className="text-right font-semibold text-green-600 dark:text-green-400">
-                                                ${(product.quantity * product.unit_price).toFixed(2)}
-                                            </td>
-                                            <td>
-                                                <div className="flex justify-center space-x-2">
-                                                    <button
-                                                        onClick={() => handleEdit(product)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(product.id)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {filteredProducts.map((product) => {
+                                        const price = parseFloat(product.unit_price) || 0;
+                                        const qty = parseInt(product.quantity) || 0;
+                                        return (
+                                            <tr key={product.id}>
+                                                <td className="font-medium">{product.name}</td>
+                                                <td className="text-right">{qty}</td>
+                                                <td className="text-right font-semibold">${price.toFixed(2)}</td>
+                                                <td className="text-right font-semibold text-primary-600 dark:text-primary-400">
+                                                    {(price * exchangeRate).toFixed(2)} Bs
+                                                </td>
+                                                <td className="text-right font-semibold text-green-600 dark:text-green-400">
+                                                    ${(qty * price).toFixed(2)}
+                                                </td>
+                                                <td>
+                                                    <div className="flex justify-center space-x-2">
+                                                        <button
+                                                            onClick={() => handleEdit(product)}
+                                                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                        >
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(product.id)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
