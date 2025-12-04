@@ -205,7 +205,12 @@ export async function initializeDatabase() {
       )
     `);
 
-    // Shift inventory (inventario por turno)
+    // Shift inventory (inventario por turno) - drop and recreate to fix constraint
+    try {
+      await pool.execute('DROP TABLE IF EXISTS shift_inventory');
+    } catch (e) {
+      // Table might not exist
+    }
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS shift_inventory (
         id INT AUTO_INCREMENT PRIMARY KEY,
