@@ -7,7 +7,7 @@ const router = express.Router();
 // Get products for closing (current system quantities)
 router.get('/products', verifyToken, async (req, res) => {
     try {
-        const products = await dbAll('SELECT id, name, quantity, units_per_box FROM products ORDER BY name');
+        const products = await dbAll('SELECT id, name, quantity, units_per_box, unit_price FROM products ORDER BY name');
         res.json(products);
     } catch (error) {
         console.error('Error loading products for close:', error);

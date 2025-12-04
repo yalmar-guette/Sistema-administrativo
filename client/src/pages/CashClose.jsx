@@ -28,6 +28,7 @@ export default function CashClose() {
     const [counts, setCounts] = useState({});
     const [history, setHistory] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
+    const [exchangeRate, setExchangeRate] = useState(50);
 
     useEffect(() => {
         loadData();
@@ -35,12 +36,14 @@ export default function CashClose() {
 
     const loadData = async () => {
         try {
-            const [productsRes, historyRes] = await Promise.all([
+            const [productsRes, historyRes, rateRes] = await Promise.all([
                 api.get('/cash-close/products'),
-                api.get('/cash-close/history')
+                api.get('/cash-close/history'),
+                api.get('/settings/exchange-rate')
             ]);
             setProducts(productsRes.data);
             setHistory(historyRes.data);
+            setExchangeRate(parseFloat(rateRes.data.exchange_rate) || 50);
 
             // Initialize counts with system quantities
             const initialCounts = {};
@@ -216,9 +219,11 @@ export default function CashClose() {
                             <thead>
                                 <tr>
                                     <th>Producto</th>
-                                    <th className="text-center">Stock Sistema (Inicio)</th>
-                                    <th className="text-center">Conteo Físico (Cierre)</th>
-                                    <th className="text-center">Diferencia (Venta)</th>
+                                    <th className="text-right">Precio $</th>
+                                    <th className="text-right">Precio Bs</th>
+                                    <th className="text-center">Stock Sistema</th>
+                                    <th className="text-center">Conteo Físico</th>
+                                    <th className="text-center">Diferencia</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -226,10 +231,14 @@ export default function CashClose() {
                                     const upb = parseInt(product.units_per_box) || 1;
                                     const count = counts[product.id] || { boxes: 0, units: 0 };
                                     const diff = calculateDifference(product);
+                                    const price = parseFloat(product.unit_price) || 0;
+                                    const priceBs = price * exchangeRate;
 
                                     return (
                                         <tr key={product.id}>
                                             <td className="font-medium">{product.name}</td>
+                                            <td className="text-right font-semibold">${price.toFixed(2)}</td>
+                                            <td className="text-right font-semibold text-primary-600 dark:text-primary-400">{priceBs.toFixed(2)} Bs</td>
                                             <td className="text-center">
                                                 <span className="font-semibold">{formatQuantity(product.quantity, upb)}</span>
                                             </td>
