@@ -41,11 +41,11 @@ router.post('/', verifyToken, async (req, res) => {
         const product = await dbGet('SELECT * FROM products WHERE id = ?', [result.insertId]);
         res.status(201).json(product);
     } catch (error) {
-        console.error('Error creating product:', error);
+        console.error('Error creating product:', error.message, error.code, error.sqlMessage);
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ error: 'SKU already exists' });
         }
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ error: 'Server error: ' + error.message });
     }
 });
 
