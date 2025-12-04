@@ -14,8 +14,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS configuration - Allow frontend domains
+const corsOptions = {
+    origin: [
+        'http://localhost:5173', // Local development
+        'https://sistema-administrativo-frontend.onrender.com', // Production frontend
+        'https://sistema-administrativo-tfdd.onrender.com' // Alternative frontend URL
+    ],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Initialize database
@@ -35,12 +46,14 @@ app.get('/', (req, res) => {
         message: '✅ API del Sistema de Inventario y Contabilidad',
         status: 'Funcionando correctamente',
         note: 'Este es el backend. Para acceder a la aplicación, ve a:',
-        frontend: 'http://localhost:5173',
+        frontend: 'https://sistema-administrativo-frontend.onrender.com',
         endpoints: {
             auth: '/api/auth',
             inventory: '/api/inventory',
             accounting: '/api/accounting',
             users: '/api/users',
+            settings: '/api/settings',
+            sales: '/api/sales',
             health: '/api/health'
         }
     });
