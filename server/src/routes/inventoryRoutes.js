@@ -35,7 +35,15 @@ router.post('/', verifyToken, async (req, res) => {
     try {
         const result = await dbRun(
             'INSERT INTO products (name, description, sku, quantity, unit_price, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [name, description, sku || null, quantity || 0, unit_price || 0, category, req.user.id]
+            [
+                name || null,
+                description || null,
+                sku || null,
+                quantity ?? 0,
+                unit_price ?? 0,
+                category || null,
+                req.user.id
+            ]
         );
 
         const product = await dbGet('SELECT * FROM products WHERE id = ?', [result.insertId]);
