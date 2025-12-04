@@ -25,7 +25,7 @@ export default function Dashboard() {
         try {
             const [productsRes, accountingRes, salesRes] = await Promise.all([
                 api.get('/inventory'),
-                api.get('/accounting'),
+                api.get('/accounting/transactions'),
                 api.get('/sales')
             ]);
 
