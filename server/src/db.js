@@ -1,16 +1,21 @@
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcrypt';
 
-// Database connection configuration
-const dbConfig = {
+// Database connection configuration (without database specified for initial setup)
+const dbConfigWithoutDB = {
   host: process.env.DB_HOST || 'gateway01.us-east-1.prod.aws.tidbcloud.com',
   port: parseInt(process.env.DB_PORT) || 4000,
   user: process.env.DB_USER || '2dnDUSHpmxfBkdw.root',
   password: process.env.DB_PASSWORD || 'fxY4fNucsKbrrVaE',
-  database: process.env.DB_NAME || 'inventario',
   ssl: {
     rejectUnauthorized: true
-  },
+  }
+};
+
+// Database connection configuration (with database for normal operations)
+const dbConfig = {
+  ...dbConfigWithoutDB,
+  database: process.env.DB_NAME || 'inventario',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -48,11 +53,18 @@ export async function dbAll(sql, params = []) {
 // Initialize database tables
 export async function initializeDatabase() {
   try {
-    const pool = getPool();
+    // First, connect without database to create it
+    const initConnection = await mysql.createConnection(dbConfigWithoutDB);
 
     // Create database if not exists
-    await pool.execute(`CREATE DATABASE IF NOT EXISTS inventario`);
-    await pool.execute(`USE inventario`);
+    const dbName = process.env.DB_NAME || 'inventario';
+    await initConnection.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
+    await initConnection.end();
+
+    console.log(`✓ Database "${dbName}" ready`);
+
+    // Now use the pool with the database
+    const pool = getPool();
 
     // Users table
     await pool.execute(`
@@ -74,7 +86,7 @@ export async function initializeDatabase() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         description TEXT,
-        sku VARCHAR(255) UNIQUE,
+        sku VARCHAR(255),
         quantity INT DEFAULT 0,
         unit_price DECIMAL(10, 2) DEFAULT 0,
         category VARCHAR(255),
@@ -89,7 +101,7 @@ export async function initializeDatabase() {
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS settings (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        \`key\` VARCHAR(255) UNIQUE NOT NULL,
+        setting_key VARCHAR(255) UNIQUE NOT NULL,
         value TEXT NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         updated_by INT,
@@ -119,7 +131,7 @@ export async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS sale_items (
         id INT AUTO_INCREMENT PRIMARY KEY,
         sale_id INT NOT NULL,
-        product_id INT NOT NULL,
+        product_id INT,
         product_name VARCHAR(255) NOT NULL,
         quantity INT NOT NULL,
         unit_price_usd DECIMAL(10, 2) NOT NULL,
@@ -161,13 +173,15 @@ export async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS transaction_entries (
         id INT AUTO_INCREMENT PRIMARY KEY,
         transaction_id INT NOT NULL,
-        account_id INT NOT NULL,
+        account_id INT,
         debit DECIMAL(10, 2) DEFAULT 0,
         credit DECIMAL(10, 2) DEFAULT 0,
         FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
         FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
       )
     `);
+
+    console.log('✓ All tables created');
 
     // Seed super user if no users exist
     const [userRows] = await pool.execute('SELECT COUNT(*) as count FROM users');
@@ -204,10 +218,10 @@ export async function initializeDatabase() {
     }
 
     // Seed default exchange rate if not exists
-    const [settingRows] = await pool.execute('SELECT * FROM settings WHERE `key` = ?', ['exchange_rate']);
+    const [settingRows] = await pool.execute('SELECT * FROM settings WHERE setting_key = ?', ['exchange_rate']);
     if (settingRows.length === 0) {
       await pool.execute(
-        'INSERT INTO settings (`key`, value) VALUES (?, ?)',
+        'INSERT INTO settings (setting_key, value) VALUES (?, ?)',
         ['exchange_rate', '50.00']
       );
       console.log('✓ Default exchange rate set: 50.00 Bs/$');

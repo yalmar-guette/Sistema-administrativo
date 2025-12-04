@@ -7,7 +7,7 @@ const router = express.Router();
 // Get exchange rate
 router.get('/exchange-rate', verifyToken, async (req, res) => {
     try {
-        const setting = await dbGet('SELECT * FROM settings WHERE `key` = ?', ['exchange_rate']);
+        const setting = await dbGet('SELECT * FROM settings WHERE setting_key = ?', ['exchange_rate']);
         if (!setting) {
             return res.status(404).json({ error: 'Exchange rate not configured' });
         }
@@ -31,7 +31,7 @@ router.put('/exchange-rate', verifyToken, requireRole('admin', 'owner', 'superus
 
     try {
         await dbRun(
-            'UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? WHERE `key` = ?',
+            'UPDATE settings SET value = ?, updated_by = ? WHERE setting_key = ?',
             [exchange_rate.toString(), req.user.id, 'exchange_rate']
         );
 
