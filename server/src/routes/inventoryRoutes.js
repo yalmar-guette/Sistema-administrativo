@@ -65,7 +65,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     try {
         await dbRun(
             'UPDATE products SET name = ?, description = ?, sku = ?, quantity = ?, units_per_box = ?, unit_price = ?, category = ? WHERE id = ?',
-            [name, description, sku, quantity, units_per_box ?? 1, unit_price, category, req.params.id]
+            [name || null, description || null, sku || null, quantity ?? 0, units_per_box ?? 1, unit_price ?? 0, category || null, req.params.id]
         );
 
         const product = await dbGet('SELECT * FROM products WHERE id = ?', [req.params.id]);
