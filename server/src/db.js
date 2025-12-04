@@ -190,38 +190,21 @@ export async function initializeDatabase() {
       )
     `);
 
-    // Shifts table (turnos)
+    // Cash closes table (cierres de caja) - simple daily closing
     await pool.execute(`
-      CREATE TABLE IF NOT EXISTS shifts (
+      CREATE TABLE IF NOT EXISTS cash_closes (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        opened_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        closed_at TIMESTAMP NULL,
-        opened_by INT,
-        closed_by INT,
-        status ENUM('open', 'closed') DEFAULT 'open',
-        notes TEXT,
-        FOREIGN KEY (opened_by) REFERENCES users(id) ON DELETE SET NULL,
-        FOREIGN KEY (closed_by) REFERENCES users(id) ON DELETE SET NULL
-      )
-    `);
-
-    // Shift inventory (inventario por turno) - drop and recreate to fix constraint
-    try {
-      await pool.execute('DROP TABLE IF EXISTS shift_inventory');
-    } catch (e) {
-      // Table might not exist
-    }
-    await pool.execute(`
-      CREATE TABLE IF NOT EXISTS shift_inventory (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        shift_id INT NOT NULL,
+        close_date DATE NOT NULL,
         product_id INT,
         product_name VARCHAR(255) NOT NULL,
-        initial_quantity INT NOT NULL,
-        final_quantity INT NULL,
+        system_quantity INT NOT NULL,
+        physical_quantity INT NOT NULL,
+        difference INT NOT NULL,
         units_per_box INT DEFAULT 1,
-        FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,
-        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_by INT,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
 

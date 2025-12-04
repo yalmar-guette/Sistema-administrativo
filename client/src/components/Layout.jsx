@@ -12,7 +12,7 @@ export default function Layout({ children }) {
         { path: '/dashboard', label: 'Dashboard', roles: ['admin', 'owner', 'superuser', 'employee'] },
         { path: '/inventory', label: 'Inventario', roles: ['admin', 'owner', 'superuser'] },
         { path: '/sales', label: 'Ventas', roles: ['admin', 'owner', 'superuser', 'employee'] },
-        { path: '/shifts', label: 'Turnos', roles: ['admin', 'owner', 'superuser'] },
+        { path: '/cash-close', label: 'Cierre', roles: ['admin', 'owner', 'superuser'] },
         { path: '/accounting', label: 'Contabilidad', roles: ['admin', 'owner', 'superuser'] },
         { path: '/reports', label: 'Reportes', roles: ['admin', 'owner', 'superuser'] },
         { path: '/settings', label: 'Configuración', roles: ['admin', 'owner', 'superuser'] },
