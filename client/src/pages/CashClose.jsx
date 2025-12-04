@@ -466,24 +466,36 @@ export default function CashClose() {
                                             </td>
                                             <td>
                                                 <div className="flex items-center justify-center space-x-2">
-                                                    <div className="flex items-center space-x-1">
-                                                        <span className="text-sm text-gray-500">Cajas:</span>
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            value={count.boxes}
-                                                            onChange={(e) => handleCountChange(product.id, 'boxes', e.target.value)}
-                                                            className="w-16 px-2 py-1 border rounded text-center dark:bg-gray-700 dark:border-gray-600"
-                                                        />
-                                                    </div>
+                                                    {upb > 1 && (
+                                                        <div className="flex items-center space-x-1">
+                                                            <span className="text-sm text-gray-500">Cajas:</span>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={count.boxes}
+                                                                onChange={(e) => handleCountChange(product.id, 'boxes', e.target.value)}
+                                                                className="w-16 px-2 py-1 border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                                                            />
+                                                        </div>
+                                                    )}
                                                     <div className="flex items-center space-x-1">
                                                         <span className="text-sm text-gray-500">Unds:</span>
                                                         <input
                                                             type="number"
                                                             min="0"
-                                                            value={count.units}
-                                                            onChange={(e) => handleCountChange(product.id, 'units', e.target.value)}
-                                                            className="w-16 px-2 py-1 border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                                                            value={upb > 1 ? count.units : (count.boxes * upb + count.units)}
+                                                            onChange={(e) => {
+                                                                if (upb > 1) {
+                                                                    handleCountChange(product.id, 'units', e.target.value);
+                                                                } else {
+                                                                    // For products without boxes, store directly in units
+                                                                    setCounts(prev => ({
+                                                                        ...prev,
+                                                                        [product.id]: { boxes: 0, units: parseInt(e.target.value) || 0 }
+                                                                    }));
+                                                                }
+                                                            }}
+                                                            className="w-20 px-2 py-1 border rounded text-center dark:bg-gray-700 dark:border-gray-600"
                                                         />
                                                     </div>
                                                 </div>
