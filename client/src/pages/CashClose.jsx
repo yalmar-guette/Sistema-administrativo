@@ -163,22 +163,41 @@ export default function CashClose() {
             <head>
                 <title>Cierre de Caja - ${new Date().toLocaleDateString('es-ES')}</title>
                 <style>
-                    body { font-family: Arial, sans-serif; padding: 20px; }
-                    h1 { text-align: center; }
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    th { background: #f5f5f5; }
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background: #f8fafc; color: #1e293b; }
+                    .header { background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f97316 100%); color: white; padding: 25px 30px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 10px 40px rgba(220, 38, 38, 0.3); }
+                    .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+                    .header .date { font-size: 14px; opacity: 0.9; }
+                    .header .logo { display: inline-block; width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 12px; text-align: center; line-height: 50px; font-size: 24px; font-weight: bold; margin-right: 15px; float: left; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    th { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 14px 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+                    td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+                    tr:nth-child(even) { background: #f8fafc; }
                     .text-right { text-align: right; }
                     .text-center { text-align: center; }
-                    .total-row { font-weight: bold; background: #e8f5e9; }
-                    .summary { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; }
-                    .summary h3 { margin-top: 0; }
-                    .big-number { font-size: 24px; font-weight: bold; color: #2e7d32; }
+                    .total-row { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: white; font-weight: bold; font-size: 14px; }
+                    .total-row td { border: none; padding: 16px 12px; }
+                    .positive { color: #059669; font-weight: 600; }
+                    .negative { color: #dc2626; font-weight: 600; }
+                    .summary { background: white; border-radius: 16px; padding: 25px; margin-top: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .summary h3 { color: #1e293b; font-size: 18px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
+                    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+                    .summary-item { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; }
+                    .summary-item.highlight { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-left-color: #10b981; }
+                    .summary-label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+                    .summary-value { font-size: 28px; font-weight: 700; color: #1e293b; }
+                    .summary-value.green { color: #059669; }
+                    .summary-value.blue { color: #2563eb; }
+                    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px dashed #e2e8f0; color: #94a3b8; font-size: 12px; }
+                    @media print { body { padding: 15px; background: white; } .header, th, .total-row { print-color-adjust: exact; -webkit-print-color-adjust: exact; } table, .summary { box-shadow: none; } }
                 </style>
             </head>
             <body>
-                <h1>Cierre de Caja</h1>
-                <p>Fecha: ${new Date().toLocaleDateString('es-ES')} - ${new Date().toLocaleTimeString('es-ES')}</p>
+                <div class="header">
+                    <div class="logo">I</div>
+                    <h1>Cierre de Caja</h1>
+                    <div class="date">📅 ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • ⏰ ${new Date().toLocaleTimeString('es-ES')}</div>
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -215,18 +234,37 @@ export default function CashClose() {
                             `;
         }).join('')}
                         <tr class="total-row">
-                            <td colspan="5">TOTAL</td>
-                            <td class="text-center">${getTotalDifference()}</td>
-                            <td class="text-right">$${getTotalSalesUSD().toFixed(2)}</td>
-                            <td class="text-right">${getTotalSalesBs().toFixed(2)} Bs</td>
+                            <td colspan="5"><strong>📊 TOTAL GENERAL</strong></td>
+                            <td class="text-center"><strong>${getTotalDifference()}</strong></td>
+                            <td class="text-right"><strong>$${getTotalSalesUSD().toFixed(2)}</strong></td>
+                            <td class="text-right"><strong>${getTotalSalesBs().toFixed(2)} Bs</strong></td>
                         </tr>
                     </tbody>
                 </table>
                 <div class="summary">
-                    <h3>Resumen del Cierre</h3>
-                    <p>Items con diferencia: ${products.filter(p => calculateDifference(p) !== 0).length}</p>
-                    <p>Total Ventas: <span class="big-number">$${getTotalSalesUSD().toFixed(2)}</span></p>
-                    <p>Total Ventas: <span class="big-number">${getTotalSalesBs().toFixed(2)} Bs</span></p>
+                    <h3>📋 Resumen del Cierre</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Items Vendidos</div>
+                            <div class="summary-value blue">${getTotalDifference()}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Productos con Movimiento</div>
+                            <div class="summary-value blue">${products.filter(p => calculateDifference(p) !== 0).length}</div>
+                        </div>
+                        <div class="summary-item highlight">
+                            <div class="summary-label">💵 Total Ventas USD</div>
+                            <div class="summary-value green">$${getTotalSalesUSD().toFixed(2)}</div>
+                        </div>
+                        <div class="summary-item highlight">
+                            <div class="summary-label">💰 Total Ventas Bolívares</div>
+                            <div class="summary-value green">${getTotalSalesBs().toFixed(2)} Bs</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>Sistema de Inventario y Contabilidad • Generado automáticamente</p>
+                    <p>Tasa de cambio: 1 USD = ${exchangeRate.toFixed(2)} Bs</p>
                 </div>
             </body>
             </html>
