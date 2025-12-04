@@ -1,7 +1,22 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
-import { Plus, Edit2, Trash2, Package, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Package, Search, Box } from 'lucide-react';
+
+// Helper function to format quantity as boxes + units
+function formatQuantity(quantity, unitsPerBox) {
+    const qty = parseInt(quantity) || 0;
+    const upb = parseInt(unitsPerBox) || 1;
+
+    if (upb <= 1) return qty.toString();
+
+    const boxes = Math.floor(qty / upb);
+    const units = qty % upb;
+
+    if (boxes === 0) return `${units} unid.`;
+    if (units === 0) return `${boxes} caja${boxes > 1 ? 's' : ''}`;
+    return `${boxes} caja${boxes > 1 ? 's' : ''} + ${units} unid.`;
+}
 
 export default function Inventory() {
     const [products, setProducts] = useState([]);
@@ -12,8 +27,8 @@ export default function Inventory() {
     const [exchangeRate, setExchangeRate] = useState(51.89);
     const [formData, setFormData] = useState({
         name: '',
-        description: '',
         quantity: 0,
+        units_per_box: 1,
         unit_price: 0
     });
 
@@ -46,7 +61,7 @@ export default function Inventory() {
             }
             setShowModal(false);
             setEditingProduct(null);
-            setFormData({ name: '', description: '', quantity: 0, unit_price: 0 });
+            setFormData({ name: '', quantity: 0, units_per_box: 1, unit_price: 0 });
             loadProducts();
         } catch (error) {
             alert(error.response?.data?.error || 'Error al guardar producto');
@@ -55,7 +70,12 @@ export default function Inventory() {
 
     const handleEdit = (product) => {
         setEditingProduct(product);
-        setFormData(product);
+        setFormData({
+            name: product.name,
+            quantity: product.quantity,
+            units_per_box: product.units_per_box || 1,
+            unit_price: product.unit_price
+        });
         setShowModal(true);
     };
 
@@ -84,7 +104,7 @@ export default function Inventory() {
                     <button
                         onClick={() => {
                             setEditingProduct(null);
-                            setFormData({ name: '', description: '', quantity: 0, unit_price: 0 });
+                            setFormData({ name: '', quantity: 0, units_per_box: 1, unit_price: 0 });
                             setShowModal(true);
                         }}
                         className="btn btn-primary flex items-center space-x-2 shadow-lg"
@@ -134,13 +154,29 @@ export default function Inventory() {
                                     {filteredProducts.map((product) => {
                                         const price = parseFloat(product.unit_price) || 0;
                                         const qty = parseInt(product.quantity) || 0;
+                                        const upb = parseInt(product.units_per_box) || 1;
                                         return (
                                             <tr key={product.id}>
-                                                <td className="font-medium">{product.name}</td>
-                                                <td className="text-right">{qty}</td>
+                                                <td className="font-medium">
+                                                    <div className="flex items-center space-x-2">
+                                                        <span>{product.name}</span>
+                                                        {upb > 1 && (
+                                                            <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full flex items-center">
+                                                                <Box className="w-3 h-3 mr-1" />
+                                                                {upb}/caja
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="text-right">
+                                                    <span className="font-semibold">{formatQuantity(qty, upb)}</span>
+                                                    {upb > 1 && (
+                                                        <span className="block text-xs text-gray-500">({qty} unid.)</span>
+                                                    )}
+                                                </td>
                                                 <td className="text-right font-semibold">${price.toFixed(2)}</td>
                                                 <td className="text-right font-semibold text-primary-600 dark:text-primary-400">
-                                                    {(price * exchangeRate).toFixed(2)} Bs
+                                                    {(price * parseFloat(exchangeRate)).toFixed(2)} Bs
                                                 </td>
                                                 <td className="text-right font-semibold text-green-600 dark:text-green-400">
                                                     ${(qty * price).toFixed(2)}
@@ -194,31 +230,34 @@ export default function Inventory() {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Descripción
-                                </label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="input"
-                                    rows="3"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Cantidad *
+                                        Cantidad (unidades) *
                                     </label>
                                     <input
                                         type="number"
                                         value={formData.quantity}
-                                        onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) })}
+                                        onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
                                         className="input"
                                         min="0"
                                         required
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <Box className="w-4 h-4 inline mr-1" />
+                                        Unidades por Caja
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={formData.units_per_box}
+                                        onChange={(e) => setFormData({ ...formData, units_per_box: parseInt(e.target.value) || 1 })}
+                                        className="input"
+                                        min="1"
+                                        placeholder="Ej: 24, 36"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Deja 1 si no aplica</p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -228,13 +267,22 @@ export default function Inventory() {
                                         type="number"
                                         step="0.01"
                                         value={formData.unit_price}
-                                        onChange={(e) => setFormData({ ...formData, unit_price: parseFloat(e.target.value) })}
+                                        onChange={(e) => setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })}
                                         className="input"
                                         min="0"
                                         required
                                     />
                                 </div>
                             </div>
+
+                            {/* Preview */}
+                            {formData.units_per_box > 1 && formData.quantity > 0 && (
+                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                        <strong>Vista previa:</strong> {formData.quantity} unidades = {formatQuantity(formData.quantity, formData.units_per_box)}
+                                    </p>
+                                </div>
+                            )}
 
                             <div className="flex justify-end space-x-3 pt-4">
                                 <button

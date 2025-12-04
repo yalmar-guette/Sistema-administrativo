@@ -8,6 +8,7 @@ import accountingRoutes from './routes/accountingRoutes.js';
 import usersRoutes from './routes/usersRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
+import shiftsRoutes from './routes/shiftsRoutes.js';
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use('/api/accounting', accountingRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/sales', salesRoutes);
+app.use('/api/shifts', shiftsRoutes);
 
 // Root route (informational)
 app.get('/', (req, res) => {

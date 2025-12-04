@@ -8,6 +8,7 @@ import Users from './pages/Users';
 import Sales from './pages/Sales';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Shifts from './pages/Shifts';
 
 function PrivateRoute({ children, roles }) {
     const { user, loading } = useAuth();
@@ -90,6 +91,14 @@ function App() {
                         element={
                             <PrivateRoute roles={['owner', 'superuser']}>
                                 <Users />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/shifts"
+                        element={
+                            <PrivateRoute roles={['admin', 'owner', 'superuser']}>
+                                <Shifts />
                             </PrivateRoute>
                         }
                     />

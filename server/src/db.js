@@ -88,6 +88,7 @@ export async function initializeDatabase() {
         description TEXT,
         sku VARCHAR(255),
         quantity INT DEFAULT 0,
+        units_per_box INT DEFAULT 1,
         unit_price DECIMAL(10, 2) DEFAULT 0,
         category VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -96,6 +97,14 @@ export async function initializeDatabase() {
         FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
+
+    // Add units_per_box column if not exists (for existing tables)
+    try {
+      await pool.execute('ALTER TABLE products ADD COLUMN units_per_box INT DEFAULT 1');
+      console.log('✓ Added units_per_box column to products');
+    } catch (e) {
+      // Column already exists, ignore
+    }
 
     // Settings table (for exchange rate)
     await pool.execute(`
@@ -178,6 +187,36 @@ export async function initializeDatabase() {
         credit DECIMAL(10, 2) DEFAULT 0,
         FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
         FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Shifts table (turnos)
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS shifts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        opened_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        closed_at TIMESTAMP NULL,
+        opened_by INT,
+        closed_by INT,
+        status ENUM('open', 'closed') DEFAULT 'open',
+        notes TEXT,
+        FOREIGN KEY (opened_by) REFERENCES users(id) ON DELETE SET NULL,
+        FOREIGN KEY (closed_by) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Shift inventory (inventario por turno)
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS shift_inventory (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        shift_id INT NOT NULL,
+        product_id INT NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        initial_quantity INT NOT NULL,
+        final_quantity INT NULL,
+        units_per_box INT DEFAULT 1,
+        FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
       )
     `);
 

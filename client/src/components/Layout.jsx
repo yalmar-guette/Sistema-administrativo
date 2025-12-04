@@ -12,6 +12,7 @@ export default function Layout({ children }) {
         { path: '/dashboard', label: 'Dashboard', roles: ['admin', 'owner', 'superuser', 'employee'] },
         { path: '/inventory', label: 'Inventario', roles: ['admin', 'owner', 'superuser'] },
         { path: '/sales', label: 'Ventas', roles: ['admin', 'owner', 'superuser', 'employee'] },
+        { path: '/shifts', label: 'Turnos', roles: ['admin', 'owner', 'superuser'] },
         { path: '/accounting', label: 'Contabilidad', roles: ['admin', 'owner', 'superuser'] },
         { path: '/reports', label: 'Reportes', roles: ['admin', 'owner', 'superuser'] },
         { path: '/settings', label: 'Configuración', roles: ['admin', 'owner', 'superuser'] },
@@ -61,8 +62,8 @@ export default function Layout({ children }) {
                                     key={item.path}
                                     to={item.path}
                                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${location.pathname === item.path
-                                            ? 'bg-gradient-to-r from-primary-600 to-red-600 text-white shadow-lg scale-105'
-                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'
+                                        ? 'bg-gradient-to-r from-primary-600 to-red-600 text-white shadow-lg scale-105'
+                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'
                                         }`}
                                 >
                                     {item.label}
@@ -141,8 +142,8 @@ export default function Layout({ children }) {
                                         to={item.path}
                                         onClick={() => setMenuOpen(false)}
                                         className={`px-4 py-3 rounded-lg font-medium transition-all ${location.pathname === item.path
-                                                ? 'bg-gradient-to-r from-primary-600 to-red-600 text-white shadow-md'
-                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            ? 'bg-gradient-to-r from-primary-600 to-red-600 text-white shadow-md'
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                             }`}
                                     >
                                         {item.label}

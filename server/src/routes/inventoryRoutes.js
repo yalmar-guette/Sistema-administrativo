@@ -30,16 +30,17 @@ router.get('/:id', verifyToken, async (req, res) => {
 
 // Create product
 router.post('/', verifyToken, async (req, res) => {
-    const { name, description, sku, quantity, unit_price, category } = req.body;
+    const { name, description, sku, quantity, units_per_box, unit_price, category } = req.body;
 
     try {
         const result = await dbRun(
-            'INSERT INTO products (name, description, sku, quantity, unit_price, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO products (name, description, sku, quantity, units_per_box, unit_price, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 name || null,
                 description || null,
                 sku || null,
                 quantity ?? 0,
+                units_per_box ?? 1,
                 unit_price ?? 0,
                 category || null,
                 req.user.id
@@ -59,12 +60,12 @@ router.post('/', verifyToken, async (req, res) => {
 
 // Update product
 router.put('/:id', verifyToken, async (req, res) => {
-    const { name, description, sku, quantity, unit_price, category } = req.body;
+    const { name, description, sku, quantity, units_per_box, unit_price, category } = req.body;
 
     try {
         await dbRun(
-            'UPDATE products SET name = ?, description = ?, sku = ?, quantity = ?, unit_price = ?, category = ? WHERE id = ?',
-            [name, description, sku, quantity, unit_price, category, req.params.id]
+            'UPDATE products SET name = ?, description = ?, sku = ?, quantity = ?, units_per_box = ?, unit_price = ?, category = ? WHERE id = ?',
+            [name, description, sku, quantity, units_per_box ?? 1, unit_price, category, req.params.id]
         );
 
         const product = await dbGet('SELECT * FROM products WHERE id = ?', [req.params.id]);
