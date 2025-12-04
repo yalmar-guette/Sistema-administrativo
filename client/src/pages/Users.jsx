@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
-import { Plus, Trash2, Users as UsersIcon, Shield } from 'lucide-react';
+import { Plus, Trash2, Users as UsersIcon, Shield, Key, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Users() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [newPassword, setNewPassword] = useState('');
     const { user: currentUser } = useAuth();
     const [formData, setFormData] = useState({
         username: '',
@@ -52,6 +55,25 @@ export default function Users() {
         } catch (error) {
             alert(error.response?.data?.error || 'Error al eliminar usuario');
         }
+    };
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/users/${selectedUser.id}/password`, { newPassword });
+            alert('Contraseña actualizada correctamente');
+            setShowPasswordModal(false);
+            setNewPassword('');
+            setSelectedUser(null);
+        } catch (error) {
+            alert(error.response?.data?.error || 'Error al cambiar contraseña');
+        }
+    };
+
+    const openPasswordModal = (user) => {
+        setSelectedUser(user);
+        setNewPassword('');
+        setShowPasswordModal(true);
     };
 
     const roleLabels = {
@@ -129,7 +151,16 @@ export default function Users() {
                                                 {new Date(user.created_at).toLocaleDateString('es-ES')}
                                             </td>
                                             <td>
-                                                <div className="flex justify-center">
+                                                <div className="flex justify-center space-x-2">
+                                                    {/* Change Password Button */}
+                                                    <button
+                                                        onClick={() => openPasswordModal(user)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                        title="Cambiar contraseña"
+                                                    >
+                                                        <Key className="w-4 h-4" />
+                                                    </button>
+                                                    {/* Delete Button */}
                                                     <button
                                                         onClick={() => handleDelete(user.id)}
                                                         disabled={user.id === currentUser.id}
@@ -149,12 +180,15 @@ export default function Users() {
                 </div>
             </div>
 
-            {/* Modal */}
+            {/* Modal Nuevo Usuario */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
-                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Nuevo Usuario</h3>
+                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+                                <X className="w-6 h-6" />
+                            </button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
@@ -223,6 +257,55 @@ export default function Users() {
                                 </button>
                                 <button type="submit" className="btn btn-primary">
                                     Crear Usuario
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Cambiar Contraseña */}
+            {showPasswordModal && selectedUser && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Cambiar Contraseña</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    Usuario: <span className="font-medium">{selectedUser.username}</span>
+                                </p>
+                            </div>
+                            <button onClick={() => setShowPasswordModal(false)} className="text-gray-500 hover:text-gray-700">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleChangePassword} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Nueva Contraseña *
+                                </label>
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="input"
+                                    required
+                                    minLength="6"
+                                    placeholder="Mínimo 6 caracteres"
+                                />
+                            </div>
+
+                            <div className="flex justify-end space-x-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPasswordModal(false)}
+                                    className="btn btn-secondary"
+                                >
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="btn btn-primary flex items-center space-x-2">
+                                    <Key className="w-4 h-4" />
+                                    <span>Cambiar Contraseña</span>
                                 </button>
                             </div>
                         </form>
