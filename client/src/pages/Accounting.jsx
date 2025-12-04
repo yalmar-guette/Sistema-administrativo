@@ -121,7 +121,7 @@ export default function Accounting() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {['asset', 'liability', 'equity', 'revenue'].map(type => {
                         const typeAccounts = accounts.filter(a => a.type === type);
-                        const total = typeAccounts.reduce((sum, a) => sum + a.balance, 0);
+                        const total = typeAccounts.reduce((sum, a) => sum + parseFloat(a.balance), 0);
                         const labels = {
                             asset: 'Activos',
                             liability: 'Pasivos',
@@ -155,7 +155,7 @@ export default function Accounting() {
                     ) : (
                         <div className="space-y-4">
                             {transactions.map((trans) => {
-                                const totalDebit = trans.entries.reduce((sum, e) => sum + e.debit, 0);
+                                const totalDebit = trans.entries.reduce((sum, e) => sum + parseFloat(e.debit), 0);
                                 return (
                                     <div
                                         key={trans.id}
@@ -191,19 +191,23 @@ export default function Accounting() {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {trans.entries.map((entry, i) => (
-                                                        <tr key={i}>
-                                                            <td>
-                                                                {entry.account_code} - {entry.account_name}
-                                                            </td>
-                                                            <td className="text-right">
-                                                                {entry.debit > 0 ? `$${entry.debit.toFixed(2)}` : '-'}
-                                                            </td>
-                                                            <td className="text-right">
-                                                                {entry.credit > 0 ? `$${entry.credit.toFixed(2)}` : '-'}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
+                                                    {trans.entries.map((entry, i) => {
+                                                        const debit = parseFloat(entry.debit) || 0;
+                                                        const credit = parseFloat(entry.credit) || 0;
+                                                        return (
+                                                            <tr key={i}>
+                                                                <td>
+                                                                    {entry.account_code} - {entry.account_name}
+                                                                </td>
+                                                                <td className="text-right">
+                                                                    {debit > 0 ? `$${debit.toFixed(2)}` : '-'}
+                                                                </td>
+                                                                <td className="text-right">
+                                                                    {credit > 0 ? `$${credit.toFixed(2)}` : '-'}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
                                                     <tr className="font-bold bg-gray-50 dark:bg-gray-900">
                                                         <td>TOTAL</td>
                                                         <td className="text-right">${totalDebit.toFixed(2)}</td>

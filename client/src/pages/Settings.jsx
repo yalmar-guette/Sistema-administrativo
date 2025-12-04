@@ -68,7 +68,7 @@ export default function Settings() {
                                 <div>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">Tasa Actual</p>
                                     <p className="text-3xl font-bold text-primary-600 dark:text-primary-400">
-                                        {currentRate.exchange_rate.toFixed(2)} Bs/$
+                                        {parseFloat(currentRate.exchange_rate).toFixed(2)} Bs/$
                                     </p>
                                 </div>
                                 <RefreshCw className="w-12 h-12 text-primary-600 dark:text-primary-400" />

@@ -49,19 +49,19 @@ export default function Reports() {
         csv += 'PRODUCTOS\n';
         csv += 'Producto,Stock Inicial,Vendidos,Stock Final,Ingreso USD,Ingreso Bs\n';
         report.products.forEach(p => {
-            csv += `${p.name},${p.initial_stock},${p.sold},${p.final_stock},${p.revenue_usd.toFixed(2)},${p.revenue_bs.toFixed(2)}\n`;
+            csv += `${p.name},${p.initial_stock},${p.sold},${p.final_stock},${(parseFloat(p.revenue_usd) || 0).toFixed(2)},${(parseFloat(p.revenue_bs) || 0).toFixed(2)}\n`;
         });
 
         csv += '\nMÉTODOS DE PAGO\n';
         csv += 'Método,Cantidad,Total USD,Total Bs\n';
         Object.entries(report.payment_methods).forEach(([method, data]) => {
-            csv += `${method},${data.count},${data.usd.toFixed(2)},${data.bs.toFixed(2)}\n`;
+            csv += `${method},${data.count},${(parseFloat(data.usd) || 0).toFixed(2)},${(parseFloat(data.bs) || 0).toFixed(2)}\n`;
         });
 
         csv += `\nTOTALES\n`;
         csv += `Total Ventas:,${report.totals.total_sales}\n`;
-        csv += `Total USD:,${report.totals.total_usd.toFixed(2)}\n`;
-        csv += `Total Bs:,${report.totals.total_bs.toFixed(2)}\n`;
+        csv += `Total USD:,${(parseFloat(report.totals.total_usd) || 0).toFixed(2)}\n`;
+        csv += `Total Bs:,${(parseFloat(report.totals.total_bs) || 0).toFixed(2)}\n`;
 
         return csv;
     };
@@ -135,20 +135,24 @@ export default function Reports() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {report.products.map((product, index) => (
-                                                <tr key={index}>
-                                                    <td className="font-medium">{product.name}</td>
-                                                    <td className="text-center">{product.initial_stock}</td>
-                                                    <td className="text-center font-semibold text-primary-600 dark:text-primary-400">
-                                                        {product.sold}
-                                                    </td>
-                                                    <td className="text-center">{product.final_stock}</td>
-                                                    <td className="text-right">${product.revenue_usd.toFixed(2)}</td>
-                                                    <td className="text-right text-green-600 dark:text-green-400">
-                                                        {product.revenue_bs.toFixed(2)} Bs
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {report.products.map((product, index) => {
+                                                const revenueUsd = parseFloat(product.revenue_usd) || 0;
+                                                const revenueBs = parseFloat(product.revenue_bs) || 0;
+                                                return (
+                                                    <tr key={index}>
+                                                        <td className="font-medium">{product.name}</td>
+                                                        <td className="text-center">{product.initial_stock}</td>
+                                                        <td className="text-center font-semibold text-primary-600 dark:text-primary-400">
+                                                            {product.sold}
+                                                        </td>
+                                                        <td className="text-center">{product.final_stock}</td>
+                                                        <td className="text-right">${revenueUsd.toFixed(2)}</td>
+                                                        <td className="text-right text-green-600 dark:text-green-400">
+                                                            {revenueBs.toFixed(2)} Bs
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -158,28 +162,32 @@ export default function Reports() {
                             <div className="mb-8">
                                 <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-3">Ingresos por Método de Pago</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {Object.entries(report.payment_methods).map(([method, data]) => (
-                                        <div key={method} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                                {method.replace('_', ' ').toUpperCase()}
+                                    {Object.entries(report.payment_methods).map(([method, data]) => {
+                                        const usd = parseFloat(data.usd) || 0;
+                                        const bs = parseFloat(data.bs) || 0;
+                                        return (
+                                            <div key={method} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                                    {method.replace('_', ' ').toUpperCase()}
+                                                </div>
+                                                <div className="text-lg font-bold text-gray-900 dark:text-white">
+                                                    {data.count} venta{data.count !== 1 ? 's' : ''}
+                                                </div>
+                                                <div className="text-sm mt-2 space-y-1">
+                                                    {usd > 0 && (
+                                                        <div className="text-green-600 dark:text-green-400">
+                                                            ${usd.toFixed(2)}
+                                                        </div>
+                                                    )}
+                                                    {bs > 0 && (
+                                                        <div className="text-primary-600 dark:text-primary-400">
+                                                            {bs.toFixed(2)} Bs
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="text-lg font-bold text-gray-900 dark:text-white">
-                                                {data.count} venta{data.count !== 1 ? 's' : ''}
-                                            </div>
-                                            <div className="text-sm mt-2 space-y-1">
-                                                {data.usd > 0 && (
-                                                    <div className="text-green-600 dark:text-green-400">
-                                                        ${data.usd.toFixed(2)}
-                                                    </div>
-                                                )}
-                                                {data.bs > 0 && (
-                                                    <div className="text-primary-600 dark:text-primary-400">
-                                                        {data.bs.toFixed(2)} Bs
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -196,13 +204,13 @@ export default function Reports() {
                                     <div>
                                         <div className="text-sm text-gray-600 dark:text-gray-400">Total en Dólares</div>
                                         <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                            ${report.totals.total_usd.toFixed(2)}
+                                            ${(parseFloat(report.totals.total_usd) || 0).toFixed(2)}
                                         </div>
                                     </div>
                                     <div>
                                         <div className="text-sm text-gray-600 dark:text-gray-400">Total en Bolívares</div>
                                         <div className="text-3xl font-bold text-primary-600 dark:text-primary-400">
-                                            {report.totals.total_bs.toFixed(2)} Bs
+                                            {(parseFloat(report.totals.total_bs) || 0).toFixed(2)} Bs
                                         </div>
                                     </div>
                                 </div>
