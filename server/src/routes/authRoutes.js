@@ -100,13 +100,28 @@ router.get('/me', async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await dbGet('SELECT id, username, email, role FROM users WHERE id = ?', [decoded.id]);
+        const user = await dbGet('SELECT * FROM users WHERE id = ?', [decoded.id]);
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json(user);
+        // Get user's organizations with roles
+        const organizations = await dbAll(`
+            SELECT o.id, o.name, uo.role
+            FROM organizations o
+            JOIN user_organizations uo ON o.id = uo.organization_id
+            WHERE uo.user_id = ?
+            ORDER BY o.name
+        `, [user.id]);
+
+        res.json({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            is_superuser: user.is_superuser ? true : false,
+            organizations: organizations
+        });
     } catch (error) {
         res.status(401).json({ error: 'Invalid token' });
     }
