@@ -4,10 +4,23 @@ import { verifyToken, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all products
+// Get all products (filtered by inventory_id from header)
 router.get('/', verifyToken, async (req, res) => {
     try {
-        const products = await dbAll('SELECT * FROM products ORDER BY created_at DESC');
+        const inventoryId = req.headers['x-inventory-id'];
+
+        let products;
+        if (inventoryId) {
+            products = await dbAll(
+                'SELECT * FROM products WHERE inventory_id = ? ORDER BY created_at DESC',
+                [inventoryId]
+            );
+        } else {
+            // No inventory selected - return empty or all based on superuser
+            products = req.user.is_superuser
+                ? await dbAll('SELECT * FROM products ORDER BY created_at DESC')
+                : [];
+        }
         res.json(products);
     } catch (error) {
         console.error('Error loading products:', error);
@@ -31,11 +44,17 @@ router.get('/:id', verifyToken, async (req, res) => {
 // Create product
 router.post('/', verifyToken, async (req, res) => {
     const { name, description, sku, quantity, units_per_box, unit_price, category } = req.body;
+    const inventoryId = req.headers['x-inventory-id'];
+
+    if (!inventoryId) {
+        return res.status(400).json({ error: 'Debe seleccionar un inventario' });
+    }
 
     try {
         const result = await dbRun(
-            'INSERT INTO products (name, description, sku, quantity, units_per_box, unit_price, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO products (inventory_id, name, description, sku, quantity, units_per_box, unit_price, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
+                inventoryId,
                 name || null,
                 description || null,
                 sku || null,

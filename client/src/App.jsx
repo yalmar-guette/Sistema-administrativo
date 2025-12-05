@@ -9,9 +9,10 @@ import Sales from './pages/Sales';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import CashClose from './pages/CashClose';
+import Organizations from './pages/Organizations';
 
 function PrivateRoute({ children, roles }) {
-    const { user, loading } = useAuth();
+    const { user, loading, getCurrentRole } = useAuth();
 
     if (loading) {
         return (
@@ -25,8 +26,17 @@ function PrivateRoute({ children, roles }) {
         return <Navigate to="/login" />;
     }
 
-    if (roles && !roles.includes(user.role)) {
-        return <Navigate to="/dashboard" />;
+    // Superuser has access to everything
+    if (user.is_superuser) {
+        return children;
+    }
+
+    // Check role if roles are specified
+    if (roles) {
+        const currentRole = getCurrentRole();
+        if (!roles.includes(currentRole)) {
+            return <Navigate to="/dashboard" />;
+        }
     }
 
     return children;
@@ -99,6 +109,14 @@ function App() {
                         element={
                             <PrivateRoute roles={['admin', 'owner', 'superuser']}>
                                 <CashClose />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/organizations"
+                        element={
+                            <PrivateRoute>
+                                <Organizations />
                             </PrivateRoute>
                         }
                     />
