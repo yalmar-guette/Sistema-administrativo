@@ -145,8 +145,8 @@ export default function Organizations() {
                                 key={org.id}
                                 onClick={() => switchOrganization(org)}
                                 className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${currentOrganization?.id === org.id
-                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
+                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
                                     }`}
                             >
                                 <div className="flex justify-between items-start">
@@ -164,8 +164,8 @@ export default function Organizations() {
                                         </div>
                                         {org.role && (
                                             <span className={`inline-block mt-2 px-2 py-0.5 text-xs rounded-full ${org.role === 'owner' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' :
-                                                    org.role === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
-                                                        'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                                org.role === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                                                    'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                                                 }`}>
                                                 {org.role}
                                             </span>
@@ -204,13 +204,15 @@ export default function Organizations() {
                                 <Package className="w-6 h-6 mr-2" />
                                 Inventarios de {currentOrganization.name}
                             </h2>
-                            <button
-                                onClick={() => { setEditingInv(null); setInvForm({ name: '' }); setShowInvModal(true); }}
-                                className="btn btn-primary flex items-center space-x-2"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span>Nuevo Inventario</span>
-                            </button>
+                            {(user?.is_superuser || getCurrentRole() === 'owner') && (
+                                <button
+                                    onClick={() => { setEditingInv(null); setInvForm({ name: '' }); setShowInvModal(true); }}
+                                    className="btn btn-primary flex items-center space-x-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span>Nuevo Inventario</span>
+                                </button>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

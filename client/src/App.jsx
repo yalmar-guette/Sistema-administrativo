@@ -84,7 +84,7 @@ function App() {
                     <Route
                         path="/reports"
                         element={
-                            <PrivateRoute roles={['admin', 'owner', 'superuser']}>
+                            <PrivateRoute roles={['admin', 'owner', 'employee', 'superuser']}>
                                 <Reports />
                             </PrivateRoute>
                         }
@@ -100,7 +100,7 @@ function App() {
                     <Route
                         path="/users"
                         element={
-                            <PrivateRoute roles={['owner', 'superuser']}>
+                            <PrivateRoute roles={['owner', 'admin', 'superuser']}>
                                 <Users />
                             </PrivateRoute>
                         }
@@ -108,7 +108,7 @@ function App() {
                     <Route
                         path="/cash-close"
                         element={
-                            <PrivateRoute roles={['admin', 'owner', 'superuser']}>
+                            <PrivateRoute roles={['admin', 'owner', 'employee', 'superuser']}>
                                 <CashClose />
                             </PrivateRoute>
                         }
@@ -118,14 +118,6 @@ function App() {
                         element={
                             <PrivateRoute>
                                 <Organizations />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/profile"
-                        element={
-                            <PrivateRoute>
-                                <Profile />
                             </PrivateRoute>
                         }
                     />
