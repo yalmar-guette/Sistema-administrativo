@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Plus, Edit2, Trash2, Users, Package, Building2 } from 'lucide-react';
 
 export default function Organizations() {
+    // Using getCurrentRole from context
     const { user, currentOrganization, switchOrganization, loadInventories, getCurrentRole } = useAuth();
     const [organizations, setOrganizations] = useState([]);
     const [inventories, setInventories] = useState([]);
