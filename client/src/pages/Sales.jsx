@@ -212,14 +212,14 @@ export default function Sales() {
                                                 <td className="font-mono text-sm font-semibold text-primary-600 dark:text-primary-400">
                                                     {sale.sale_number}
                                                 </td>
-                                                <td>{new Date(sale.date).toLocaleDateString('es-ES')}</td>
-                                                <td>{sale.customer_name || '-'}</td>
+                                                <td className="text-gray-600 dark:text-gray-400">{new Date(sale.date).toLocaleDateString('es-ES')}</td>
+                                                <td className="text-gray-900 dark:text-white">{sale.customer_name || '-'}</td>
                                                 <td>
-                                                    <span className="text-sm">
+                                                    <span className="text-sm text-gray-900 dark:text-white">
                                                         {pm?.icon} {pm?.label}
                                                     </span>
                                                 </td>
-                                                <td className="text-right font-semibold">${totalUsdSale.toFixed(2)}</td>
+                                                <td className="text-right font-semibold text-gray-900 dark:text-white">${totalUsdSale.toFixed(2)}</td>
                                                 <td className="text-right font-semibold text-green-600 dark:text-green-400">
                                                     {totalBsSale.toFixed(2)} Bs
                                                 </td>

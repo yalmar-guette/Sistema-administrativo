@@ -157,7 +157,7 @@ export default function Inventory() {
                                         const upb = parseInt(product.units_per_box) || 1;
                                         return (
                                             <tr key={product.id}>
-                                                <td className="font-medium">
+                                                <td className="font-medium text-gray-900 dark:text-white">
                                                     <div className="flex items-center space-x-2">
                                                         <span>{product.name}</span>
                                                         {upb > 1 && (
@@ -169,9 +169,9 @@ export default function Inventory() {
                                                     </div>
                                                 </td>
                                                 <td className="text-right">
-                                                    <span className="font-semibold">{formatQuantity(qty, upb)}</span>
+                                                    <span className="font-semibold text-gray-900 dark:text-white">{formatQuantity(qty, upb)}</span>
                                                     {upb > 1 && (
-                                                        <span className="block text-xs text-gray-500">({qty} unid.)</span>
+                                                        <span className="block text-xs text-gray-500 dark:text-gray-400">({qty} unid.)</span>
                                                     )}
                                                 </td>
                                                 <td className="text-right font-semibold">${price.toFixed(2)}</td>

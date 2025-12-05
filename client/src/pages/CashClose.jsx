@@ -458,11 +458,11 @@ export default function CashClose() {
 
                                     return (
                                         <tr key={product.id}>
-                                            <td className="font-medium">{product.name}</td>
-                                            <td className="text-right font-semibold">${price.toFixed(2)}</td>
+                                            <td className="font-medium text-gray-900 dark:text-white">{product.name}</td>
+                                            <td className="text-right font-semibold text-gray-900 dark:text-white">${price.toFixed(2)}</td>
                                             <td className="text-right font-semibold text-primary-600 dark:text-primary-400">{priceBs.toFixed(2)} Bs</td>
                                             <td className="text-center">
-                                                <span className="font-semibold">{formatQuantity(product.quantity, upb)}</span>
+                                                <span className="font-semibold text-gray-900 dark:text-white">{formatQuantity(product.quantity, upb)}</span>
                                             </td>
                                             <td>
                                                 <div className="flex items-center justify-center space-x-2">
@@ -578,7 +578,7 @@ export default function CashClose() {
                                 <tbody>
                                     {viewingDetails.items.map((item, i) => (
                                         <tr key={i}>
-                                            <td className="font-medium">{item.product_name}</td>
+                                            <td className="font-medium text-gray-900 dark:text-white">{item.product_name}</td>
                                             <td className="text-center">{item.system_quantity}</td>
                                             <td className="text-center">{item.physical_quantity}</td>
                                             <td className={`text-center font-bold ${item.difference > 0 ? 'text-green-600' : item.difference < 0 ? 'text-red-600' : ''}`}>
