@@ -17,13 +17,6 @@ export default function Dashboard() {
     });
     const [loading, setLoading] = useState(true);
 
-    // Auto-redirect superuser to organizations if no inventory
-    useEffect(() => {
-        if (!loading && user?.is_superuser && !currentInventory) {
-            navigate('/organizations');
-        }
-    }, [loading, user, currentInventory, navigate]);
-
     useEffect(() => {
         if (currentInventory) {
             loadDashboardData();
@@ -59,6 +52,12 @@ export default function Dashboard() {
             setLoading(false);
         }
     };
+
+    // IMMEDIATE redirect for superuser (before rendering anything)
+    if (!loading && user?.is_superuser && !currentInventory) {
+        navigate('/organizations');
+        return null; // Don't render anything while redirecting
+    }
 
     // If no inventory selected, show role-specific message
     if (!loading && !currentInventory) {
