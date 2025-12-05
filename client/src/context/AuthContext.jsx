@@ -58,9 +58,28 @@ export function AuthProvider({ children }) {
 
             if (response.data.organizations?.length > 0) {
                 const savedOrg = response.data.organizations.find(o => o.id == savedOrgId);
-                setCurrentOrganization(savedOrg || response.data.organizations[0]);
+                const orgToSet = savedOrg || response.data.organizations[0];
+                setCurrentOrganization(orgToSet);
+
+                // Load inventories and wait for completion
+                try {
+                    const invResponse = await api.get(`/inventories/organization/${orgToSet.id}`);
+                    setInventories(invResponse.data);
+
+                    if (invResponse.data.length > 0) {
+                        const savedInv = invResponse.data.find(i => i.id == savedInvId);
+                        setCurrentInventory(savedInv || invResponse.data[0]);
+                    } else {
+                        setCurrentInventory(null);
+                    }
+                } catch (invError) {
+                    console.error('Error loading inventories:', invError);
+                    setInventories([]);
+                    setCurrentInventory(null);
+                }
             }
         } catch (error) {
+            console.error('Error loading user:', error);
             localStorage.removeItem('token');
         } finally {
             setLoading(false);
