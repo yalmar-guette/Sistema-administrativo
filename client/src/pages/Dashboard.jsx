@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
-    const { user, currentOrganization, currentInventory } = useAuth();
+    const { user, currentOrganization, currentInventory, getCurrentRole, logout } = useAuth();
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         totalProducts: 0,
         totalValue: 0,
@@ -15,6 +16,13 @@ export default function Dashboard() {
         totalSalesRevenue: 0
     });
     const [loading, setLoading] = useState(true);
+
+    // Auto-redirect superuser to organizations if no inventory
+    useEffect(() => {
+        if (!loading && user?.is_superuser && !currentInventory) {
+            navigate('/organizations');
+        }
+    }, [loading, user, currentInventory, navigate]);
 
     useEffect(() => {
         if (currentInventory) {
@@ -52,67 +60,97 @@ export default function Dashboard() {
         }
     };
 
-    // If superuser without organization/inventory selected
-    if (!loading && user?.is_superuser && !currentInventory) {
+    // If no inventory selected, show role-specific message
+    if (!loading && !currentInventory) {
+        const currentRole = getCurrentRole();
+
+        // Superuser is handled by auto-redirect above (shouldn't reach here)
+
+        // Owner: can go to organizations to create/select inventory
+        if (currentRole === 'owner') {
+            return (
+                <Layout>
+                    <div className="flex items-center justify-center min-h-[60vh]">
+                        <div className="text-center max-w-md">
+                            <Building2 className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                Hola {user?.username}
+                            </h2>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                                Necesitas seleccionar o crear un inventario para comenzar a trabajar.
+                            </p>
+                            <Link to="/organizations" className="btn btn-primary inline-flex items-center">
+                                <Building2 className="w-4 h-4 mr-2" />
+                                Ir a Organizaciones
+                            </Link>
+                        </div>
+                    </div>
+                </Layout>
+            );
+        }
+
+        // Admin: cannot create inventory, must wait for owner
+        if (currentRole === 'admin') {
+            return (
+                <Layout>
+                    <div className="flex items-center justify-center min-h-[60vh]">
+                        <div className="text-center max-w-md">
+                            <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                No hay inventario seleccionado
+                            </h2>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                                Contacta al dueño de la organización para que cree un inventario.
+                            </p>
+                            <button onClick={logout} className="btn btn-secondary inline-flex items-center">
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Salir
+                            </button>
+                        </div>
+                    </div>
+                </Layout>
+            );
+        }
+
+        // Employee: cannot create inventory, must wait
+        if (currentRole === 'employee') {
+            return (
+                <Layout>
+                    <div className="flex items-center justify-center min-h-[60vh]">
+                        <div className="text-center max-w-md">
+                            <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                No hay inventario disponible
+                            </h2>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                                Contacta al administrador para obtener acceso a un inventario.
+                            </p>
+                            <button onClick={logout} className="btn btn-secondary inline-flex items-center">
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Salir
+                            </button>
+                        </div>
+                    </div>
+                </Layout>
+            );
+        }
+
+        // Fallback for users without role or organization
         return (
             <Layout>
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-center max-w-md">
-                        <Building2 className="w-16 h-16 text-purple-600 dark:text-purple-400 mx-auto mb-4" />
+                        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Bienvenido, Super Usuario
+                            Sin acceso
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 mb-6">
-                            Eres un superusuario global. Para ver el dashboard, selecciona una organización e inventario, o crea una nueva organización.
+                            Tu usuario no tiene permisos. Contacta al administrador.
                         </p>
-                        <Link to="/organizations" className="btn btn-primary inline-flex items-center">
-                            <Building2 className="w-4 h-4 mr-2" />
-                            Ir a Organizaciones
-                        </Link>
-                    </div>
-                </div>
-            </Layout>
-        );
-    }
-
-    // If user has no organizations and is not superuser
-    if (!loading && (!user?.organizations || user.organizations.length === 0) && !user?.is_superuser) {
-        return (
-            <Layout>
-                <div className="flex items-center justify-center min-h-[60vh]">
-                    <div className="text-center max-w-md">
-                        <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Sin Acceso a Organizaciones
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                            Tu usuario no está asignado a ninguna organización. Por favor contacta al administrador para que te asigne a una organización.
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500">
-                            Usuario: <strong className="text-gray-900 dark:text-white">{user?.username}</strong>
-                        </p>
-                    </div>
-                </div>
-            </Layout>
-        );
-    }
-
-    // If user has orgs but no inventory selected
-    if (!loading && currentOrganization && !currentInventory) {
-        return (
-            <Layout>
-                <div className="flex items-center justify-center min-h-[60vh]">
-                    <div className="text-center max-w-md">
-                        <Building2 className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Selecciona un Inventario
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                            La organización <strong>{currentOrganization.name}</strong> no tiene inventarios.
-                        </p>
-                        <Link to="/organizations" className="btn btn-primary inline-flex items-center">
-                            Ir a Organizaciones
-                        </Link>
+                        <button onClick={logout} className="btn btn-secondary inline-flex items-center">
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Salir
+                        </button>
                     </div>
                 </div>
             </Layout>
