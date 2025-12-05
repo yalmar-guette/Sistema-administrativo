@@ -10,6 +10,7 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import CashClose from './pages/CashClose';
 import Organizations from './pages/Organizations';
+import Profile from './pages/Profile';
 
 function PrivateRoute({ children, roles }) {
     const { user, loading, getCurrentRole } = useAuth();
@@ -117,6 +118,14 @@ function App() {
                         element={
                             <PrivateRoute>
                                 <Organizations />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/profile"
+                        element={
+                            <PrivateRoute>
+                                <Profile />
                             </PrivateRoute>
                         }
                     />

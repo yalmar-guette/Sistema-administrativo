@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
-import { Plus, Trash2, Users as UsersIcon, Shield, Key, X } from 'lucide-react';
+import { Plus, Trash2, Users as UsersIcon, Shield, Key, X, Edit2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Users() {
@@ -9,9 +9,11 @@ export default function Users() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [showRoleModal, setShowRoleModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [newPassword, setNewPassword] = useState('');
-    const { user: currentUser } = useAuth();
+    const [newRole, setNewRole] = useState('');
+    const { user: currentUser, currentOrganization } = useAuth();
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -20,12 +22,19 @@ export default function Users() {
     });
 
     useEffect(() => {
-        loadUsers();
-    }, []);
+        if (currentOrganization) {
+            loadUsers();
+        }
+    }, [currentOrganization]);
 
     const loadUsers = async () => {
         try {
-            const response = await api.get('/users');
+            setLoading(true);
+            const response = await api.get('/users', {
+                headers: {
+                    'x-organization-id': currentOrganization?.id
+                }
+            });
             setUsers(response.data);
         } catch (error) {
             console.error('Error loading users:', error);
@@ -48,9 +57,13 @@ export default function Users() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
+        if (!confirm('¿Remover este usuario de la organización?')) return;
         try {
-            await api.delete(`/users/${id}`);
+            await api.delete(`/users/${id}`, {
+                headers: {
+                    'x-organization-id': currentOrganization?.id
+                }
+            });
             loadUsers();
         } catch (error) {
             alert(error.response?.data?.error || 'Error al eliminar usuario');
@@ -70,25 +83,60 @@ export default function Users() {
         }
     };
 
+    const handleChangeRole = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/users/${selectedUser.id}/role`, { role: newRole }, {
+                headers: {
+                    'x-organization-id': currentOrganization?.id
+                }
+            });
+            alert('Rol actualizado correctamente');
+            setShowRoleModal(false);
+            setNewRole('');
+            setSelectedUser(null);
+            loadUsers();
+        } catch (error) {
+            alert(error.response?.data?.error || 'Error al cambiar rol');
+        }
+    };
+
     const openPasswordModal = (user) => {
         setSelectedUser(user);
         setNewPassword('');
         setShowPasswordModal(true);
     };
 
+    const openRoleModal = (user) => {
+        setSelectedUser(user);
+        setNewRole(user.role);
+        setShowRoleModal(true);
+    };
+
     const roleLabels = {
-        superuser: 'Super Usuario',
         owner: 'Dueño',
         admin: 'Administrador',
         employee: 'Empleado'
     };
 
     const roleColors = {
-        superuser: 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300',
-        owner: 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300',
-        admin: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300',
-        employee: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+        owner: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+        admin: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+        employee: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
     };
+
+    if (!currentOrganization) {
+        return (
+            <Layout>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <UsersIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600 dark:text-gray-400">Selecciona una organización para ver usuarios</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>
@@ -96,7 +144,7 @@ export default function Users() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Usuarios</h2>
-                        <p className="text-gray-600 dark:text-gray-400">Gestión de usuarios del sistema</p>
+                        <p className="text-gray-600 dark:text-gray-400">Usuarios de {currentOrganization.name}</p>
                     </div>
                     <button
                         onClick={() => setShowModal(true)}
@@ -115,7 +163,7 @@ export default function Users() {
                     ) : users.length === 0 ? (
                         <div className="text-center py-12">
                             <UsersIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600 dark:text-gray-400">No hay usuarios</p>
+                            <p className="text-gray-600 dark:text-gray-400">No hay usuarios en esta organización</p>
                         </div>
                     ) : (
                         <div className="table-container">
@@ -137,21 +185,31 @@ export default function Users() {
                                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-red-600 flex items-center justify-center text-white font-bold text-sm">
                                                         {user.username.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <span>{user.username}</span>
+                                                    <span className="text-gray-900 dark:text-white">{user.username}</span>
                                                 </div>
                                             </td>
                                             <td className="text-gray-600 dark:text-gray-400">{user.email}</td>
                                             <td>
-                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${roleColors[user.role]}`}>
-                                                    <Shield className="w-3 h-3 inline mr-1" />
-                                                    {roleLabels[user.role]}
-                                                </span>
+                                                <div className="flex items-center space-x-2">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${roleColors[user.role]}`}>
+                                                        <Shield className="w-3 h-3 inline mr-1" />
+                                                        {roleLabels[user.role]}
+                                                    </span>
+                                                </div>
                                             </td>
                                             <td className="text-gray-600 dark:text-gray-400">
                                                 {new Date(user.created_at).toLocaleDateString('es-ES')}
                                             </td>
                                             <td>
                                                 <div className="flex justify-center space-x-2">
+                                                    {/* Change Role Button */}
+                                                    <button
+                                                        onClick={() => openRoleModal(user)}
+                                                        className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                                                        title="Cambiar rol"
+                                                    >
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </button>
                                                     {/* Change Password Button */}
                                                     <button
                                                         onClick={() => openPasswordModal(user)}
@@ -165,7 +223,7 @@ export default function Users() {
                                                         onClick={() => handleDelete(user.id)}
                                                         disabled={user.id === currentUser.id}
                                                         className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        title={user.id === currentUser.id ? 'No puedes eliminar tu propia cuenta' : 'Eliminar usuario'}
+                                                        title={user.id === currentUser.id ? 'No puedes eliminarte' : 'Remover de organización'}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -186,7 +244,7 @@ export default function Users() {
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
                         <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Nuevo Usuario</h3>
-                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -203,7 +261,6 @@ export default function Users() {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Email *
@@ -216,7 +273,6 @@ export default function Users() {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Contraseña *
@@ -227,10 +283,9 @@ export default function Users() {
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     className="input"
                                     required
-                                    minLength="6"
+                                    minLength={6}
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Rol *
@@ -239,15 +294,13 @@ export default function Users() {
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                     className="input"
-                                    required
                                 >
                                     <option value="employee">Empleado</option>
                                     <option value="admin">Administrador</option>
                                     <option value="owner">Dueño</option>
                                 </select>
                             </div>
-
-                            <div className="flex justify-end space-x-3 pt-4">
+                            <div className="flex justify-end space-x-2 pt-4">
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
@@ -265,24 +318,22 @@ export default function Users() {
             )}
 
             {/* Modal Cambiar Contraseña */}
-            {showPasswordModal && selectedUser && (
+            {showPasswordModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
                         <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Cambiar Contraseña</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    Usuario: <span className="font-medium">{selectedUser.username}</span>
-                                </p>
-                            </div>
-                            <button onClick={() => setShowPasswordModal(false)} className="text-gray-500 hover:text-gray-700">
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Cambiar Contraseña</h3>
+                            <button onClick={() => setShowPasswordModal(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
                         <form onSubmit={handleChangePassword} className="p-6 space-y-4">
+                            <p className="text-gray-700 dark:text-gray-300">
+                                Usuario: <strong>{selectedUser?.username}</strong>
+                            </p>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Nueva Contraseña *
+                                    Nueva Contraseña * (mínimo 6 caracteres)
                                 </label>
                                 <input
                                     type="password"
@@ -290,12 +341,10 @@ export default function Users() {
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     className="input"
                                     required
-                                    minLength="6"
-                                    placeholder="Mínimo 6 caracteres"
+                                    minLength={6}
                                 />
                             </div>
-
-                            <div className="flex justify-end space-x-3 pt-4">
+                            <div className="flex justify-end space-x-2 pt-4">
                                 <button
                                     type="button"
                                     onClick={() => setShowPasswordModal(false)}
@@ -303,9 +352,58 @@ export default function Users() {
                                 >
                                     Cancelar
                                 </button>
-                                <button type="submit" className="btn btn-primary flex items-center space-x-2">
-                                    <Key className="w-4 h-4" />
-                                    <span>Cambiar Contraseña</span>
+                                <button type="submit" className="btn btn-primary">
+                                    Actualizar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Cambiar Rol */}
+            {showRoleModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Cambiar Rol</h3>
+                            <button onClick={() => setShowRoleModal(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleChangeRole} className="p-6 space-y-4">
+                            <p className="text-gray-700 dark:text-gray-300">
+                                Usuario: <strong>{selectedUser?.username}</strong>
+                            </p>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Rol en {currentOrganization.name} *
+                                </label>
+                                <select
+                                    value={newRole}
+                                    onChange={(e) => setNewRole(e.target.value)}
+                                    className="input"
+                                >
+                                    <option value="employee">Empleado</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="owner">Dueño</option>
+                                </select>
+                            </div>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                <p className="text-sm text-blue-800 dark:text-blue-300">
+                                    💡 El rol solo aplica para esta organización
+                                </p>
+                            </div>
+                            <div className="flex justify-end space-x-2 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowRoleModal(false)}
+                                    className="btn btn-secondary"
+                                >
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    Actualizar Rol
                                 </button>
                             </div>
                         </form>
