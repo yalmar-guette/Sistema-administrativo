@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
-import { Package, DollarSign, TrendingUp, ShoppingCart, Building2, AlertCircle } from 'lucide-react';
+import { Package, DollarSign, TrendingUp, ShoppingCart, Building2, AlertCircle, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
     const { user, currentOrganization, currentInventory } = useAuth();
