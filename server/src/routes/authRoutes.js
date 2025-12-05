@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { dbGet, dbRun } from '../db.js';
+import { dbGet, dbRun, dbAll } from '../db.js';
 
 const router = express.Router();
 
@@ -21,8 +21,17 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // Get user's organizations with roles
+        const organizations = await dbAll(`
+            SELECT o.id, o.name, uo.role
+            FROM organizations o
+            JOIN user_organizations uo ON o.id = uo.organization_id
+            WHERE uo.user_id = ?
+            ORDER BY o.name
+        `, [user.id]);
+
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
+            { id: user.id, username: user.username, is_superuser: user.is_superuser },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -33,7 +42,8 @@ router.post('/login', async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                is_superuser: user.is_superuser ? true : false,
+                organizations: organizations
             }
         });
     } catch (error) {

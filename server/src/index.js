@@ -9,6 +9,8 @@ import usersRoutes from './routes/usersRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
 import cashCloseRoutes from './routes/cashCloseRoutes.js';
+import organizationsRoutes from './routes/organizationsRoutes.js';
+import inventoriesRoutes from './routes/inventoriesRoutes.js';
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ app.use('/api/users', usersRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/cash-close', cashCloseRoutes);
+app.use('/api/organizations', organizationsRoutes);
+app.use('/api/inventories', inventoriesRoutes);
 
 // Root route (informational)
 app.get('/', (req, res) => {

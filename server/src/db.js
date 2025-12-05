@@ -73,10 +73,53 @@ export async function initializeDatabase() {
         username VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
-        role ENUM('superuser', 'owner', 'admin', 'employee') NOT NULL,
+        is_superuser BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_by INT,
         FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Add is_superuser column if not exists (for existing tables)
+    try {
+      await pool.execute('ALTER TABLE users ADD COLUMN is_superuser BOOLEAN DEFAULT FALSE');
+      console.log('✓ Added is_superuser column to users');
+    } catch (e) {
+      // Column already exists
+    }
+
+    // Organizations table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS organizations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_by INT,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Inventories table (within organizations)
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS inventories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        organization_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+      )
+    `);
+
+    // User-Organization relationship (role per organization)
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS user_organizations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        organization_id INT NOT NULL,
+        role ENUM('owner', 'admin', 'employee') NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_user_org (user_id, organization_id)
       )
     `);
 
@@ -84,6 +127,7 @@ export async function initializeDatabase() {
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS products (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        inventory_id INT,
         name VARCHAR(255) NOT NULL,
         description TEXT,
         sku VARCHAR(255),
@@ -94,9 +138,18 @@ export async function initializeDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         created_by INT,
+        FOREIGN KEY (inventory_id) REFERENCES inventories(id) ON DELETE CASCADE,
         FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
+
+    // Add inventory_id column if not exists
+    try {
+      await pool.execute('ALTER TABLE products ADD COLUMN inventory_id INT');
+      console.log('✓ Added inventory_id column to products');
+    } catch (e) {
+      // Column already exists
+    }
 
     // Add units_per_box column if not exists (for existing tables)
     try {
@@ -122,6 +175,7 @@ export async function initializeDatabase() {
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS sales (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        inventory_id INT,
         sale_number VARCHAR(255) UNIQUE NOT NULL,
         date DATE NOT NULL,
         customer_name VARCHAR(255),
@@ -131,9 +185,16 @@ export async function initializeDatabase() {
         exchange_rate_used DECIMAL(10, 2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_by INT,
+        FOREIGN KEY (inventory_id) REFERENCES inventories(id) ON DELETE CASCADE,
         FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
+
+    // Add inventory_id to sales if not exists
+    try {
+      await pool.execute('ALTER TABLE sales ADD COLUMN inventory_id INT');
+      console.log('✓ Added inventory_id column to sales');
+    } catch (e) { }
 
     // Sale items table
     await pool.execute(`
@@ -194,6 +255,7 @@ export async function initializeDatabase() {
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS cash_closes (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        inventory_id INT,
         close_date DATE NOT NULL,
         product_id INT,
         product_name VARCHAR(255) NOT NULL,
@@ -203,10 +265,17 @@ export async function initializeDatabase() {
         units_per_box INT DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_by INT,
+        FOREIGN KEY (inventory_id) REFERENCES inventories(id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
         FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
+
+    // Add inventory_id to cash_closes if not exists
+    try {
+      await pool.execute('ALTER TABLE cash_closes ADD COLUMN inventory_id INT');
+      console.log('✓ Added inventory_id column to cash_closes');
+    } catch (e) { }
 
     console.log('✓ All tables created');
 
@@ -215,11 +284,16 @@ export async function initializeDatabase() {
     if (userRows[0].count === 0) {
       const hashedPassword = bcrypt.hashSync('admin123', 10);
       await pool.execute(
-        'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
-        ['superuser', 'superuser@inventario.com', hashedPassword, 'superuser']
+        'INSERT INTO users (username, email, password, is_superuser) VALUES (?, ?, ?, ?)',
+        ['superuser', 'superuser@inventario.com', hashedPassword, true]
       );
       console.log('✓ Super user created: superuser / admin123');
     }
+
+    // Update existing superuser to have is_superuser flag
+    try {
+      await pool.execute('UPDATE users SET is_superuser = TRUE WHERE username = ?', ['superuser']);
+    } catch (e) { }
 
     // Seed some basic accounts if none exist
     const [accountRows] = await pool.execute('SELECT COUNT(*) as count FROM accounts');

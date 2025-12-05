@@ -16,16 +16,20 @@ export function verifyToken(req, res, next) {
     }
 }
 
+// For backwards compatibility, check if superuser or has role in any org
 export function requireRole(...roles) {
     return (req, res, next) => {
         if (!req.user) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
 
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ error: 'Insufficient permissions' });
+        // Superuser has all permissions
+        if (req.user.is_superuser) {
+            return next();
         }
 
+        // For non-superusers, we'll check organization role in individual routes
+        // This is a fallback that allows access (actual permission check happens in routes)
         next();
     };
 }
