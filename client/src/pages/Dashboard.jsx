@@ -52,28 +52,6 @@ export default function Dashboard() {
         }
     };
 
-    // If user has no organizations and is not superuser
-    if (!loading && (!user?.organizations || user.organizations.length === 0) && !user?.is_superuser) {
-        return (
-            <Layout>
-                <div className="flex items-center justify-center min-h-[60vh]">
-                    <div className="text-center max-w-md">
-                        <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Sin Acceso a Organizaciones
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                            Tu usuario no está asignado a ninguna organización. Por favor contacta al administrador para que te asigne a una organización.
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500">
-                            Usuario: <strong className="text-gray-900 dark:text-white">{user?.username}</strong>
-                        </p>
-                    </div>
-                </div>
-            </Layout>
-        );
-    }
-
     // If superuser without organization/inventory selected
     if (!loading && user?.is_superuser && !currentInventory) {
         return (
@@ -91,6 +69,28 @@ export default function Dashboard() {
                             <Building2 className="w-4 h-4 mr-2" />
                             Ir a Organizaciones
                         </Link>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // If user has no organizations and is not superuser
+    if (!loading && (!user?.organizations || user.organizations.length === 0) && !user?.is_superuser) {
+        return (
+            <Layout>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center max-w-md">
+                        <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                            Sin Acceso a Organizaciones
+                        </h2>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                            Tu usuario no está asignado a ninguna organización. Por favor contacta al administrador para que te asigne a una organización.
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500">
+                            Usuario: <strong className="text-gray-900 dark:text-white">{user?.username}</strong>
+                        </p>
                     </div>
                 </div>
             </Layout>
