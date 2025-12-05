@@ -52,7 +52,7 @@ export default function Dashboard() {
         }
     };
 
-    // If user has no organizations
+    // If user has no organizations and is not superuser
     if (!loading && (!user?.organizations || user.organizations.length === 0) && !user?.is_superuser) {
         return (
             <Layout>
@@ -68,6 +68,29 @@ export default function Dashboard() {
                         <p className="text-sm text-gray-500 dark:text-gray-500">
                             Usuario: <strong className="text-gray-900 dark:text-white">{user?.username}</strong>
                         </p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // If superuser without organization/inventory selected
+    if (!loading && user?.is_superuser && !currentInventory) {
+        return (
+            <Layout>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center max-w-md">
+                        <Building2 className="w-16 h-16 text-purple-500 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                            Bienvenido, Super Usuario
+                        </h2>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
+                            Eres un superusuario global. Para ver el dashboard, selecciona una organización e inventario, o crea una nueva organización.
+                        </p>
+                        <Link to="/organizations" className="btn btn-primary inline-flex items-center">
+                            <Building2 className="w-4 h-4 mr-2" />
+                            Ir a Organizaciones
+                        </Link>
                     </div>
                 </div>
             </Layout>
