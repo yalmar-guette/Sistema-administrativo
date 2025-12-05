@@ -1,5 +1,12 @@
 import jwt from 'jsonwebtoken';
 
+/**
+ * Middleware to verify JWT token from Authorization header.
+ * Attaches decoded user to req.user if valid.
+ * @param {import('express').Request} req - Express request object
+ * @param {import('express').Response} res - Express response object
+ * @param {import('express').NextFunction} next - Express next function
+ */
 export function verifyToken(req, res, next) {
     const token = req.headers.authorization?.split(' ')[1];
 
@@ -16,7 +23,12 @@ export function verifyToken(req, res, next) {
     }
 }
 
-// For backwards compatibility, check if superuser or has role in any org
+/**
+ * Middleware to check if user has required role(s).
+ * Superusers bypass this check.
+ * @param {...string} roles - Roles allowed to access the route
+ * @returns {import('express').RequestHandler} Express middleware
+ */
 export function requireRole(...roles) {
     return (req, res, next) => {
         if (!req.user) {

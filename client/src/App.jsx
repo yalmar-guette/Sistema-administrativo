@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter, Routes, Route, Navigate,
+} from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -13,127 +15,127 @@ import Organizations from './pages/Organizations';
 import Profile from './pages/Profile';
 
 function PrivateRoute({ children, roles }) {
-    const { user, loading, getCurrentRole } = useAuth();
+  const { user, loading, getCurrentRole } = useAuth();
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
-            </div>
-        );
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent" />
+      </div>
+    );
+  }
 
-    if (!user) {
-        return <Navigate to="/login" />;
-    }
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
-    // Superuser has access to everything
-    if (user.is_superuser) {
-        return children;
-    }
-
-    // Check role if roles are specified
-    if (roles) {
-        const currentRole = getCurrentRole();
-        if (!roles.includes(currentRole)) {
-            return <Navigate to="/dashboard" />;
-        }
-    }
-
+  // Superuser has access to everything
+  if (user.is_superuser) {
     return children;
+  }
+
+  // Check role if roles are specified
+  if (roles) {
+    const currentRole = getCurrentRole();
+    if (!roles.includes(currentRole)) {
+      return <Navigate to="/dashboard" />;
+    }
+  }
+
+  return children;
 }
 
 function App() {
-    return (
-        <AuthProvider>
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <PrivateRoute>
-                                <Dashboard />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/inventory"
-                        element={
-                            <PrivateRoute>
-                                <Inventory />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/accounting"
-                        element={
-                            <PrivateRoute>
-                                <Accounting />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/sales"
-                        element={
-                            <PrivateRoute>
-                                <Sales />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/reports"
-                        element={
-                            <PrivateRoute roles={['admin', 'owner', 'employee', 'superuser']}>
-                                <Reports />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/settings"
-                        element={
-                            <PrivateRoute roles={['admin', 'owner', 'superuser']}>
-                                <Settings />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/users"
-                        element={
-                            <PrivateRoute roles={['owner', 'admin', 'superuser']}>
-                                <Users />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/cash-close"
-                        element={
-                            <PrivateRoute roles={['admin', 'owner', 'employee', 'superuser']}>
-                                <CashClose />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/organizations"
-                        element={
-                            <PrivateRoute>
-                                <Organizations />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/profile"
-                        element={
-                            <PrivateRoute>
-                                <Profile />
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route path="/" element={<Navigate to="/dashboard" />} />
-                </Routes>
-            </BrowserRouter>
-        </AuthProvider>
-    );
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={(
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/inventory"
+            element={(
+              <PrivateRoute>
+                <Inventory />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/accounting"
+            element={(
+              <PrivateRoute>
+                <Accounting />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/sales"
+            element={(
+              <PrivateRoute>
+                <Sales />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/reports"
+            element={(
+              <PrivateRoute roles={['admin', 'owner', 'employee', 'superuser']}>
+                <Reports />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/settings"
+            element={(
+              <PrivateRoute roles={['admin', 'owner', 'superuser']}>
+                <Settings />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/users"
+            element={(
+              <PrivateRoute roles={['owner', 'admin', 'superuser']}>
+                <Users />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/cash-close"
+            element={(
+              <PrivateRoute roles={['admin', 'owner', 'employee', 'superuser']}>
+                <CashClose />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/organizations"
+            element={(
+              <PrivateRoute>
+                <Organizations />
+              </PrivateRoute>
+                          )}
+          />
+          <Route
+            path="/profile"
+            element={(
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+                          )}
+          />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }
 
 export default App;
