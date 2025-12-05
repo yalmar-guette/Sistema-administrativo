@@ -2,10 +2,12 @@ import { useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { User, Key, Mail, Save } from 'lucide-react';
+import { User, Key, Mail, Save, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [profileData, setProfileData] = useState({
         username: user?.username || '',
@@ -63,9 +65,18 @@ export default function Profile() {
         <Layout>
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
-                <div>
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Mi Perfil</h2>
-                    <p className="text-gray-600 dark:text-gray-400">Actualiza tu información personal y contraseña</p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Mi Perfil</h2>
+                        <p className="text-gray-600 dark:text-gray-400">Actualiza tu información personal y contraseña</p>
+                    </div>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="btn btn-secondary flex items-center space-x-2"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Volver</span>
+                    </button>
                 </div>
 
                 {/* Profile Info Card */}
