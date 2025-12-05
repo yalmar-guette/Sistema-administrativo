@@ -92,15 +92,31 @@ export default function Layout({ children }) {
                         {/* Controls */}
                         <div className="flex items-center space-x-3">
                             {/* User Info - Desktop */}
-                            <div className="hidden md:flex items-center space-x-3 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
-                                <div className="text-right">
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{user?.username}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400">{roleLabels[displayRole]}</p>
+                            {(user?.is_superuser || getCurrentRole() === 'owner') ? (
+                                <Link
+                                    to="/profile"
+                                    className="hidden md:flex items-center space-x-3 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                                    title="Ver mi perfil"
+                                >
+                                    <div className="text-right">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{user?.username}</p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">{roleLabels[displayRole]}</p>
+                                    </div>
+                                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${roleColors[displayRole]} flex items-center justify-center text-white font-bold shadow-md`}>
+                                        {user?.username?.charAt(0).toUpperCase()}
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div className="hidden md:flex items-center space-x-3 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                                    <div className="text-right">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{user?.username}</p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">{roleLabels[displayRole]}</p>
+                                    </div>
+                                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${roleColors[displayRole]} flex items-center justify-center text-white font-bold shadow-md`}>
+                                        {user?.username?.charAt(0).toUpperCase()}
+                                    </div>
                                 </div>
-                                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${roleColors[displayRole]} flex items-center justify-center text-white font-bold shadow-md`}>
-                                    {user?.username?.charAt(0).toUpperCase()}
-                                </div>
-                            </div>
+                            )}
 
                             {/* Dark Mode Toggle */}
                             <button
