@@ -8,6 +8,14 @@ import { Link, useNavigate } from 'react-router-dom';
 export default function Dashboard() {
     const { user, currentOrganization, currentInventory, getCurrentRole, logout } = useAuth();
     const navigate = useNavigate();
+
+    console.log('Dashboard Render:', {
+        user,
+        is_superuser: user?.is_superuser,
+        currentInventory,
+        loadingLocal: loading
+    });
+
     const [stats, setStats] = useState({
         totalProducts: 0,
         totalValue: 0,
