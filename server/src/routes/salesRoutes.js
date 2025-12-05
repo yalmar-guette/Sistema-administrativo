@@ -4,10 +4,19 @@ import { verifyToken, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all sales
+// Get all sales (filtered by inventory)
 router.get('/', verifyToken, async (req, res) => {
     try {
-        const sales = await dbAll('SELECT * FROM sales ORDER BY created_at DESC');
+        const inventoryId = req.headers['x-inventory-id'];
+
+        if (!inventoryId) {
+            return res.status(400).json({ error: 'Debe seleccionar un inventario' });
+        }
+
+        const sales = await dbAll(
+            'SELECT * FROM sales WHERE inventory_id = ? ORDER BY created_at DESC',
+            [inventoryId]
+        );
 
         // For each sale, get its items
         const salesWithItems = await Promise.all(
@@ -32,9 +41,17 @@ router.post('/', verifyToken, async (req, res) => {
         return res.status(400).json({ error: 'Invalid sale data' });
     }
 
+    const inventoryId = req.headers['x-inventory-id'];
+    if (!inventoryId) {
+        return res.status(400).json({ error: 'Debe seleccionar un inventario' });
+    }
+
     try {
-        // Generate sale number
-        const lastSale = await dbGet('SELECT sale_number FROM sales ORDER BY id DESC LIMIT 1');
+        // Generate sale number (per inventory)
+        const lastSale = await dbGet(
+            'SELECT sale_number FROM sales WHERE inventory_id = ? ORDER BY id DESC LIMIT 1',
+            [inventoryId]
+        );
         let saleNumber = 'V-0001';
         if (lastSale) {
             const lastNumber = parseInt(lastSale.sale_number.split('-')[1]);
@@ -50,11 +67,11 @@ router.post('/', verifyToken, async (req, res) => {
             totalBs += item.subtotal_bs;
         }
 
-        // Create sale
+        // Create sale with inventory_id
         const saleResult = await dbRun(
-            `INSERT INTO sales (sale_number, date, customer_name, payment_method, total_usd, total_bs, exchange_rate_used, created_by) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [saleNumber, new Date().toISOString().split('T')[0], customer_name || '', payment_method, totalUsd, totalBs, exchange_rate, req.user.id]
+            `INSERT INTO sales (sale_number, date, customer_name, payment_method, total_usd, total_bs, exchange_rate_used, inventory_id, created_by) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [saleNumber, new Date().toISOString().split('T')[0], customer_name || '', payment_method, totalUsd, totalBs, exchange_rate, inventoryId, req.user.id]
         );
 
         const saleId = saleResult.insertId;
